@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2019/11/12 12:26:07.000.675,=C:\Users\Doda_Colombo\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2019/11/12 12:26:29.000.706,C:\Users\Doda_Colombo\Documents\Embarcadero\Studio\Projects\testeAdmob.dproj=C:\Users\Doda_Colombo\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2019/11/12 12:28:18.000.066,C:\Users\Doda_Colombo\Desktop\ExemploAdmob\UPrincipal.fmx=C:\Users\Doda_Colombo\Documents\Embarcadero\Studio\Projects\Unit2.fmx</Transaction>
+    <Transaction>2019/11/12 12:28:18.000.066,C:\Users\Doda_Colombo\Desktop\ExemploAdmob\UPrincipal.pas=C:\Users\Doda_Colombo\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2019/11/12 12:28:22.000.020,C:\Users\Doda_Colombo\Desktop\ExemploAdmob\testeAdmob.dproj=C:\Users\Doda_Colombo\Documents\Embarcadero\Studio\Projects\testeAdmob.dproj</Transaction>
+    <Transaction>2019/11/12 12:29:59.000.873,=C:\Users\Doda_Colombo\Desktop\ExemploAdmob\AdMob.pas</Transaction>
+    <Transaction>2019/11/12 23:56:11.000.998,C:\Users\Doda_Colombo\Desktop\ExemploAdmob\AdMob.pas=</Transaction>
+    <Transaction>2019/11/13 00:03:28.000.604,=C:\Users\Doda_Colombo\Desktop\ExemploAdmob\AdMob.pas</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile iOSSimulator="iPhone5" Android=""/>
+	</ActiveMobileDevice>
+</BorlandProject>
