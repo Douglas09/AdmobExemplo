@@ -14,7 +14,7 @@ object Form2: TForm2
     Size.Width = 193.000000000000000000
     Size.Height = 44.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 2
+    TabOrder = 3
     Text = 'Banner'
     OnClick = btnBannerClick
   end
@@ -24,7 +24,7 @@ object Form2: TForm2
     Size.Width = 193.000000000000000000
     Size.Height = 44.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 1
+    TabOrder = 2
     Text = 'Intersticial'
     OnClick = btnIntersticialClick
   end
@@ -34,8 +34,18 @@ object Form2: TForm2
     Size.Width = 193.000000000000000000
     Size.Height = 44.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 0
+    TabOrder = 1
     Text = 'Premiado'
     OnClick = btnPremiadoClick
+  end
+  object btnAberturaApp: TButton
+    Position.X = 32.000000000000000000
+    Position.Y = 200.000000000000000000
+    Size.Width = 193.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Text = 'Abertura do app'
+    OnClick = btnAberturaAppClick
   end
 end

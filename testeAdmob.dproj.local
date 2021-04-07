@@ -11,6 +11,6 @@
     <Transaction>2019/11/13 00:03:28.000.604,=C:\Users\Doda_Colombo\Desktop\ExemploAdmob\AdMob.pas</Transaction>
   </Transactions>
 	<ActiveMobileDevice>
-		<NoProfile iOSSimulator="iPhone5" Android=""/>
+		<NoProfile iOSSimulator="iPhone5" Android="ce0616061aa8e33d04" Android64="ce0616061aa8e33d04"/>
 	</ActiveMobileDevice>
 </BorlandProject>

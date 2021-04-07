@@ -1,4 +1,4 @@
-{ 
+{
   Desenvolvida por: Douglas Colombo
   Data: 13.11.2019
   Versão: 1.0.2.1
@@ -17,7 +17,7 @@ uses
   System.Types, System.UITypes, System.Classes, System.SysUtils, FMX.Dialogs, FMX.Advertising, FMX.Types;
 
 type
-  TAdBannerType = (Banner, Interstitial, Rewarded);
+  TAdBannerType = (Banner, Interstitial, Rewarded, AppOpen);
   TOnClosed = procedure (bannerType : TAdBannerType) of object;
 
   {$IFDEF ANDROID}
@@ -28,11 +28,10 @@ type
     FTestMode: Boolean;
     FOnClosed: TOnClosed;
     FBannerType : TAdBannerType;
-
     procedure SetOnClosed(const Value: TOnClosed);  public
     property isShown : Boolean read FisShown;
     property Testmode : Boolean read FTestMode write FTestMode;
-    destructor Destroy;
+    destructor Destroy; override;
     constructor Create(AAD: JInterstitialAd);
   public
     property onBannerClosed : TOnClosed read FOnClosed write SetOnClosed;
@@ -68,7 +67,7 @@ type
   public
     procedure setParent(AOwner : TFmxObject);
     constructor Create(AOWner : TFmxObject; AdUnitId : String; BannerType : TAdBannerType);
-    destructor Destroy;
+    destructor Destroy; override;
 
     property onBannerClosed : TOnClosed read FOnClosed write SetOnClosed;
     property BannerType : TAdBannerType read FBannerType;
@@ -82,17 +81,18 @@ implementation
 
 procedure RaiseException(testMode : Boolean; MessageError : String);
 begin
-   if (testMode) then
-   begin
-      Log.D('RaiseException: '+ MessageError);
-      TThread.Synchronize(TThread.CurrentThread, procedure
-         begin
-            Try
-               if (MessageError <> '') then
-                  showMessage( MessageError );
-            Except end;
-         end);
-   end;
+  if not (testMode) then
+    exit;
+
+  Log.D('RaiseException: '+ MessageError);
+  TThread.Synchronize(TThread.CurrentThread, procedure
+    begin
+      try
+	      if (MessageError <> '') then
+          raise Exception.Create( MessageError );
+	    except
+      end;
+    end);
 end;
 
 { TMyAdViewListener }
@@ -100,13 +100,13 @@ end;
 {$IFDEF ANDROID}
 constructor TMyAdViewListener.Create(AAD: JInterstitialAd);
 begin
-  Try
-     inherited Create;
-     FAD := AAD;
-     FisShown  := false;
-     FTestMode := false;
-  Except
-     RaiseException(Testmode, 'Sem Conexão de internet');
+  try
+    inherited Create;
+    FAD := AAD;
+    FisShown  := false;
+    FTestMode := false;
+  except
+    RaiseException(Testmode, 'Sem Conexão de internet');
   end;
 end;
 
@@ -120,10 +120,10 @@ begin
   FisShown := false;
 
   TThread.Synchronize(nil, procedure
-      begin
-          if (Assigned(FOnClosed)) then
-             FOnClosed(BannerType);
-      end);
+    begin
+      if (Assigned(FOnClosed)) then
+        FOnClosed(BannerType);
+    end);
 end;
 
 procedure TMyAdViewListener.onAdFailedToLoad(errorCode: Integer);
@@ -132,13 +132,13 @@ begin
 
   Log.D('Intersititial/Reward-FailedToLoad = '+ ErrorCode.ToString);
   if (errorCode = 0) then
-     RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INTERNAL_ERROR' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString)
+    RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INTERNAL_ERROR' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString)
   else if (errorCode = 1) then
-     RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INVALID_REQUEST' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString)
+    RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INVALID_REQUEST' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString)
   else if (errorCode = 2) then
-     RaiseException(FTestMode, 'AdUnitId válida, tempo de espera esgotado.'+ sLineBreak+ 'ERROR_CODE_NETWORK_ERROR' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString)
+    RaiseException(FTestMode, 'AdUnitId válida, tempo de espera esgotado.'+ sLineBreak+ 'ERROR_CODE_NETWORK_ERROR' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString)
   else if (errorCode = 3) then {ESSE ERRO INFORMA QUE A COMUNICAÇÃO ESTÁ CORRETA COM O ADMOB, SÓ AGUARDAR AGORA ATÉ SUA CONTA SER ATIVADA}
-     RaiseException(FTestMode, 'AdUnitId válida. Aguarde até 24 horas, após a criação da promoção, para ser validada.'+ sLineBreak+ 'ERROR_CODE_NO_FILL' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString);
+    RaiseException(FTestMode, 'AdUnitId válida. Aguarde até 24 horas, após a criação da promoção, para ser validada.'+ sLineBreak+ 'ERROR_CODE_NO_FILL' +sLineBreak+ 'Código de Erro: '+ ErrorCode.toString);
 end;
 
 procedure TMyAdViewListener.onAdLeftApplication;
@@ -148,13 +148,14 @@ end;
 
 procedure TMyAdViewListener.onAdLoaded;
 begin
-  Try
-     FAD.show;
-     FisShown := true;
-     Log.D('Intersititial/Reward-Load = Sucess');
-  Except on E : Exception do
-     RaiseException(FTestMode, 'onAdLoaded error: '+ E.Message);
-  End;
+  try
+    FAD.show;
+    FisShown := true;
+    Log.D('Intersititial/Reward-Load = Sucess');
+  except
+    on E : Exception do
+      RaiseException(FTestMode, 'onAdLoaded error: '+ E.Message);
+  end;
 end;
 
 procedure TMyAdViewListener.onAdOpened;
@@ -176,13 +177,13 @@ begin
   Log.D('BannerAdDidFail = '+ Error);
   FisShown := false;
   if (Error.Contains('0')) then
-     RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INTERNAL_ERROR' +sLineBreak+ 'Mensagem: '+ Error)
+    RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INTERNAL_ERROR' +sLineBreak+ 'Mensagem: '+ Error)
   else if (Error.Contains('1')) then
-     RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INVALID_REQUEST' +sLineBreak+ 'Mensagem: '+ Error)
+    RaiseException(FTestMode, 'AdUnitId inválida.'+ sLineBreak+ 'ERROR_CODE_INVALID_REQUEST' +sLineBreak+ 'Mensagem: '+ Error)
   else if (Error.Contains('2')) then
-     RaiseException(FTestMode, 'AdUnitId válida, tempo de espera esgotado.'+ sLineBreak+ 'ERROR_CODE_NETWORK_ERROR' +sLineBreak+ 'Mensagem: '+ Error)
+    RaiseException(FTestMode, 'AdUnitId válida, tempo de espera esgotado.'+ sLineBreak+ 'ERROR_CODE_NETWORK_ERROR' +sLineBreak+ 'Mensagem: '+ Error)
   else if (Error.Contains('3')) then
-     RaiseException(FTestMode, 'AdUnitId válida. Aguarde até 24 horas, após a criação da promoção, para ser validada.' +sLineBreak+ 'ERROR_CODE_NO_FILL' +sLineBreak+ 'Mensagem: '+ Error);
+    RaiseException(FTestMode, 'AdUnitId válida. Aguarde até 24 horas, após a criação da promoção, para ser validada.' +sLineBreak+ 'ERROR_CODE_NO_FILL' +sLineBreak+ 'Mensagem: '+ Error);
 end;
 
 procedure TAdBanner.BannerAdDidLoad(Sender: TObject);
@@ -200,36 +201,50 @@ begin
   FBannerType  := BannerType;
   if (BannerType = TAdBannerType.Banner) then
   begin
-     Log.D('Create Banner: 02');
-     FAdBanner := TBannerAd.Create(AOWner);
-     FAdBanner.Parent    := FAowner;
-     FAdBanner.AdUnitID  := AdUnitId;
-     FAdBanner.OnDidFail := BannerAdDidFail;
-     FAdBanner.OnDidLoad := BannerAdDidLoad;
-     Log.D('Create Banner: 03');
-  end else if (BannerType = TAdBannerType.Interstitial) then
+    Log.D('Create Banner: 02');
+    FAdBanner := TBannerAd.Create(AOWner);
+    FAdBanner.Parent    := FAowner;
+    FAdBanner.AdUnitID  := AdUnitId;
+    FAdBanner.OnDidFail := BannerAdDidFail;
+    FAdBanner.OnDidLoad := BannerAdDidLoad;
+    Log.D('Create Banner: 03');
+  end
+  else if (BannerType = TAdBannerType.Interstitial) then
   begin
     Log.D('Create Interstitial: 04');
     {$IFDEF ANDROID}
-       FAdMob := TJInterstitialAd.JavaClass.init(MainActivity);
-       FAdMob.setAdUnitId(StringToJString( AdUnitId )); {Interstitial}
+      FAdMob := TJInterstitialAd.JavaClass.init(MainActivity);
+      FAdMob.setAdUnitId(StringToJString( AdUnitId )); {Interstitial}
     {$ENDIF} {$IFDEF IOS}
-       RaiseException(true, 'Desculpe, o banner "Interstitial" não foi implementado para IOS até o momento.');
+      RaiseException(true, 'Desculpe, o banner "Interstitial" não foi implementado para IOS até o momento.');
     {$ENDIF}
     Log.D('Create Interstitial: 05');
-  end else if (BannerType = TAdBannerType.Rewarded) then
+  end
+  else if (BannerType = TAdBannerType.Rewarded) then
   begin
     Log.D('Create Rewarded: 06');
     {$IFDEF ANDROID}
-       FAdMob := TJInterstitialAd.JavaClass.init(MainActivity);
-       FAdMob.setAdUnitId(StringToJString( AdUnitId )); {Interstitial}
+      FAdMob := TJInterstitialAd.JavaClass.init(MainActivity);
+      FAdMob.setAdUnitId(StringToJString( AdUnitId )); {Interstitial}
     {$ENDIF} {$IFDEF IOS}
-       RaiseException(true, 'Desculpe, o banner "Rewarded" não foi implementado para IOS até o momento.');
+      RaiseException(true, 'Desculpe, o banner "Rewarded" não foi implementado para IOS até o momento.');
     {$ENDIF}
     Log.D('Create Rewarded: 07');
+  end
+  else if (BannerType = TAdBannerType.AppOpen) then
+  begin
+    Log.D('Create App Open: 08');
+    {$IFDEF ANDROID}
+      FAdMob := TJInterstitialAd.JavaClass.init(MainActivity);
+      Log.D('Create App Open: 09');
+      FAdMob.setAdUnitId(StringToJString( AdUnitId )); {Interstitial}
+    {$ENDIF} {$IFDEF IOS}
+      RaiseException(true, 'Desculpe, o banner "App Open" não foi implementado para IOS até o momento.');
+    {$ENDIF}
+    Log.D('Create App Open: 10');
   end;
 
-  Log.D('Create: 08');
+  Log.D('Create: 11');
 end;
 
 destructor TAdBanner.Destroy;
@@ -237,27 +252,31 @@ begin
 {$IFDEF ANDROID}
   if (assigned(LAdViewListener)) then
   begin
-     Try
-       LAdViewListener.DisposeOf;
-       LAdViewListener := nil;
-     Except end;
+    try
+      LAdViewListener.DisposeOf;
+      LAdViewListener := nil;
+    except
+    end;
   end;
 
   if (assigned(FAdBanner)) then
   begin
-     Try
-       FAdBanner.DisposeOf;
-       FAdBanner := nil;
-     Except end;
+    try
+      FAdBanner.DisposeOf;
+      FAdBanner := nil;
+    except
+    end;
   end;
 
   if (assigned(LADRequestBuilder)) then
-     LADRequestBuilder := nil;
+    LADRequestBuilder := nil;
   if (assigned(LadRequest)) then
-     LadRequest := nil;
+    LadRequest := nil;
   if (assigned(FAdMob)) then
-     FAdMob := nil;
+    FAdMob := nil;
 {$ENDIF}
+
+  inherited;
 end;
 
 procedure TAdBanner.hide;
@@ -265,14 +284,16 @@ begin
   Log.D('hide: 01');
   if (FBannerType = TAdBannerType.Banner) then
   begin
-     FAdBanner.Hide;
-     FAdBanner.Visible := false;
-     FisShown := false;
-  end else if (FBannerType = TAdBannerType.Banner) then
+    FAdBanner.Hide;
+    FAdBanner.Visible := false;
+    FisShown := false;
+  end
+  else if (FBannerType = TAdBannerType.Interstitial) or (FBannerType = TAdBannerType.Rewarded) or
+    (FBannerType = TAdBannerType.AppOpen) then
   begin
-     {$IFDEF ANDROID}
-     FisShown := LAdViewListener.isShown;
-     {$ENDIF}
+    {$IFDEF ANDROID}
+      FisShown := LAdViewListener.isShown;
+    {$ENDIF}
   end;
   Log.D('hide: 02');
 end;
@@ -286,60 +307,62 @@ procedure TAdBanner.setParent(AOwner: TFmxObject);
 begin
   FAowner := AOwner;
   if (FBannerType = TAdBannerType.Banner) then
-     FAdBanner.Parent := FAowner
-  else if (FBannerType = TAdBannerType.Interstitial) or (FBannerType = TAdBannerType.Rewarded) then
+    FAdBanner.Parent := FAowner
+  else if (FBannerType = TAdBannerType.Interstitial) or (FBannerType = TAdBannerType.Rewarded) or
+    (FBannerType = TAdBannerType.AppOpen) then
   begin
-     {$IFDEF ANDROID}
-     FisShown := LAdViewListener.isShown;
-     {$ENDIF}
+    {$IFDEF ANDROID}
+      FisShown := LAdViewListener.isShown;
+    {$ENDIF}
   end;
 end;
 
 procedure TAdBanner.show(testMode: Boolean; Aligment : TAlignLayout);
 begin
   Log.D('show: 01');
-
   FTestMode := testMode;
-
-  if (FBannerType = TAdBannerType.Interstitial) or (FBannerType = TAdBannerType.Rewarded) then
+  if (FBannerType = TAdBannerType.Interstitial) or (FBannerType = TAdBannerType.Rewarded) or
+    (FBannerType = TAdBannerType.AppOpen) then
   begin
-     Log.D('show Interstitial/Rewarded: 02');
-     {$IFDEF ANDROID}
-         Try
-             LADRequestBuilder := TJAdRequest_Builder.Create;
-             if (testMode) then
-                LADRequestBuilder.addTestDevice(MainActivity.getDeviceID);
-             LadRequest                     := LADRequestBuilder.build();
-             LAdViewListener                := TMyAdViewListener.Create(FAdMob);
-             LAdViewListener.Testmode       := FTestMode;
-             LAdViewListener.BannerType     := BannerType;
-             LAdViewListener.onBannerClosed := onBannerClosed;
-             CallInUIThread(
-               procedure
-               begin
-                 Try
-                   FAdMob.setAdListener(TJAdListenerAdapter.JavaClass.init(LAdViewListener));
-                   FAdMob.loadAd(LadRequest);
-                   self.FisShown := LAdViewListener.isShown;
-                 Except end;
-               end);
-         Except end;
-     {$ENDIF}
-     Log.D('show Interstitial/Rewarded: 03');
-  end else if (FBannerType = TAdBannerType.Banner) then
+    Log.D('show Interstitial/Rewarded/AppOpen: 02');
+    {$IFDEF ANDROID}
+      try
+        LADRequestBuilder := TJAdRequest_Builder.Create;
+        if (testMode) then
+          LADRequestBuilder.addTestDevice(MainActivity.getDeviceID);
+        LadRequest                     := LADRequestBuilder.build();
+        LAdViewListener                := TMyAdViewListener.Create(FAdMob);
+        LAdViewListener.Testmode       := FTestMode;
+        LAdViewListener.BannerType     := BannerType;
+        LAdViewListener.onBannerClosed := onBannerClosed;
+        CallInUIThread(procedure
+          begin
+            try
+              FAdMob.setAdListener(TJAdListenerAdapter.JavaClass.init(LAdViewListener));
+              FAdMob.loadAd(LadRequest);
+              self.FisShown := LAdViewListener.isShown;
+            except
+            end;
+          end);
+      except
+      end;
+    {$ENDIF}
+    Log.D('show Interstitial/Rewarded/AppOpen: 03');
+  end
+  else if (FBannerType = TAdBannerType.Banner) then
   begin
-     Log.D('show Banner: 04');
-     FAdBanner.AdSize   := TBannerAdSize.Auto;
-     FAdBanner.Enabled  := true;
-     FAdBanner.Align    := Aligment;
-     FAdBanner.TestMode := testMode;
-     FAdBanner.Visible  := true;
-     if not (FAdBanner.IsLoaded) then
-        FAdBanner.LoadAd
-     else
-        FAdBanner.Show;
-     FisShown           := true;
-     Log.D('show Banner: 05');
+    Log.D('show Banner: 04');
+    FAdBanner.AdSize   := TBannerAdSize.Auto;
+    FAdBanner.Enabled  := true;
+    FAdBanner.Align    := Aligment;
+    FAdBanner.TestMode := testMode;
+    FAdBanner.Visible  := true;
+    if not (FAdBanner.IsLoaded) then
+      FAdBanner.LoadAd
+    else
+      FAdBanner.Show;
+    FisShown           := true;
+    Log.D('show Banner: 05');
   end;
   Log.D('show: 06');
 end;
